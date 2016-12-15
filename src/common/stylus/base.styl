@@ -1,0 +1,27 @@
+body,html
+	line-height: 1
+	font-weight: 200
+	font-family: 'PingFang SC','STHeightiSC-Light','Helvetica-Light'
+	
+.clearfix
+	display:inline-block
+	&:after
+		display:block
+		content:"."	
+		height:0
+		line-height:0
+		clear:both
+		visibility:hidden
+
+@media (-wbkit-min-device-pixl-ratio:1.5),(min-device-pixl-ratio:1.5)
+	.border-1px
+		&::after
+			-wbkit-transform: scaleY(0.7)
+			transform: scaleY(0.7)
+		
+@media (-wbkit-min-device-pixl-ratio:2),(min-device-pixl-ratio:2)
+	.border-1px
+		&::after
+			-wbkit-transform: scaleY(0.5)
+			transform: scaleY(0.5)
+		
