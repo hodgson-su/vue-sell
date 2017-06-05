@@ -2,7 +2,8 @@
 	<div class="goods">
 		<div class="menu-wrapper" ref="menuwrapper">
 			<ul>
-				<li v-for="(item,index) in goods" class="menu-item" >
+				<li v-for="(item,index) in goods" class="menu-item" 
+				:class="{'current':currentIndex===index}" @click="selectMenu(index,$event)">
 					<span class="text border-1px">
 						<span v-show="item.type>0" class="icon" :class="classMap[item.type]"></span>{{item.name}}
 					</span>
@@ -31,17 +32,23 @@
 									<span class="now">&yen;{{food.price}}</span>
 									<span class="old" v-show="food.oldPrice">&yen;{{food.oldPrice}}</span>
 								</div>
+								<div class="cartcontrol-wrapper">
+									<cartcontrol :food="food"></cartcontrol>
+								</div>
 							</div>
 						</li>
 					</ul>
 				</li>
 			</ul>
 		</div>
+		<shopcart rel="shopcart" :slect-foods="selectFoods" :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"></shopcart>
 	</div>
 </template>
 
 <script type="text/ecmascript-6">
 	import BScroll from 'better-scroll';
+	import shopcart from 'components/shopcart/shopcart';
+	import cartcontrol from 'components/cartcontrol/cartcontrol';
 
 	const  ERR_OK = 0;
 
@@ -58,18 +65,30 @@
 				scrollY: 0
 			};
 		},
-		// computed:{
-		// 	currentIndex() {
-		// 		for(let i=0;i<this.listHeight.length;i++){
-		// 			let height1 = this.listHeight[i];
-		// 			let height2 = this.listHeight[i + 1];
-		// 			if(!height2 || (this.scrollY>height1&&this.scrollY<height2)){
-		// 				return i;
-		// 			}
-		// 		}
-		// 		return 0;
-		// 	}
-		// },
+		computed:{
+			currentIndex() {
+				for(let i=0;i<this.listHeight.length;i++){
+					let height1 = this.listHeight[i];
+					let height2 = this.listHeight[i + 1];
+					if(!height2 || (this.scrollY >= height1&&this.scrollY < height2)){
+						return i;
+					}
+				}
+				return 0;
+			},
+			selectFoods(){
+				let foods = [];
+				this.goods.forEach((good) => {
+					good.foods.forEach((food) => {
+						if(food.count){
+							foods.push(food);
+						}
+					})
+				});
+				console.log(foods);
+				return foods;
+			}
+		},
 		created(){
 			this.classMap = ['decrease','discount','special','invoice','guarantee'];
 
@@ -80,22 +99,36 @@
 
 					this.$nextTick(() => {
 						this._initScroll();
-						// this._calculateHeight();
+						this._calculateHeight();
 					});
 				}
 			});
 		},
 		methods: {
+			selectMenu(index,event){
+				if(!event._constructed){
+					return;
+				}
+				let foodList = this.$refs.foodswrapper.getElementsByClassName('food-list-hook');
+				let el = foodList[index];
+				this.foodsScroll.scrollToElement(el,300);
+			},
+			_drop(target){
+				this.$refs.shopcart.drop(target);
+			},
 			_initScroll(){
-				this.menuScroll = new BScroll(this.$refs.menuwrapper,{});
+				this.menuScroll = new BScroll(this.$refs.menuwrapper,{
+					click:true
+				});
 				
 				this.foodsScroll = new BScroll(this.$refs.foodswrapper,{
+					click:true,
 					probeType: 3//在滚动的时候能够给实时位置
 				});
 
-				// this.foodsScroll.on('scroll',(pos)=>{
-				// 	this.scrollY = Math.abs(Math.round(pos.y));
-				// })
+				this.foodsScroll.on('scroll',(pos)=>{
+					this.scrollY = Math.abs(Math.round(pos.y));
+				})
 			},
 			_calculateHeight(){
 				let foodList = this.$refs.foodswrapper.getElementsByClassName('food-list-hook');
@@ -108,6 +141,15 @@
 				}
 			}
 
+		},
+		components: {
+			shopcart,
+			cartcontrol
+		},
+		events:{
+			'cart.add'(target) {
+				this._drop(target);
+			}
 		}
 	};
 	
@@ -133,12 +175,14 @@
 				width: 56px
 				padding: 0 12px
 				line-height: 14px
-				&current
+				&.current
 					position: relative
 					z-index: 10
 					margin-top: -1px
 					background:#fff
 					font-weight: 700
+					.text
+						border-noen()
 				.icon
 					display: inline-block
 					vertical-align: top
@@ -186,6 +230,7 @@
 					margin-right: 10px
 				.content
 					flex: 1
+					position:relative
 					.name
 						margin:2px 0 8px 0
 						height:14px
@@ -213,5 +258,9 @@
 							text-decoration:line-through
 							font-size: 10px
 							color: rgb(240,20,20)
+					.cartcontrol-wrapper
+						position:absolute
+						right:0
+						bottom:-5px
 										
 </style>
